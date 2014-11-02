@@ -1,0 +1,17 @@
+--- /var/www/zencart/includes/templates/template_default/templates/tpl_modules_address_book_details.php	2012-09-18 21:36:42.000000000 +0200
++++ d-centralize/workspace/zenCart/zencart_pro6pp/ADD_FILES/includes/templates/MY_TEMPLATE/templates/tpl_modules_address_book_details.php	2010-07-12 15:58:20.000000000 +0200
+@@ -50,8 +50,13 @@
+ ?>
+ 
+ <label class="inputLabel" for="street-address"><?php echo ENTRY_STREET_ADDRESS; ?></label>
+-<?php echo zen_draw_input_field('street_address', $entry->fields['entry_street_address'], zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_street_address', '40') . ' id="street-address"') . (zen_not_null(ENTRY_STREET_ADDRESS_TEXT) ? '<span class="alert">' . ENTRY_STREET_ADDRESS_TEXT . '</span>': ''); ?>
++<?php echo zen_draw_input_field('street_address', $entry->fields['entry_street_address'], zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_street_address', '40') . ' id="street-address" class="street"') . (zen_not_null(ENTRY_STREET_ADDRESS_TEXT) ? '<span class="alert">' . ENTRY_STREET_ADDRESS_TEXT . '</span>': ''); ?>
+ <br class="clearBoth" />
++
++<label class="inputLabel" for="street-no-add"><?php echo ENTRY_STREET_NO_ADD; ?></label>
++<?php echo zen_draw_input_field('street_no_add', $entry->fields['entry_street_no_add'], zen_set_field_length(TABLE_ADDRESS_BOOK, 'entry_street_no_add', '5') . ' id="street-no_add" class="streetnumber"') . (zen_not_null(ENTRY_STREET_NO_ADD_TEXT) ? '<span class="alert">' . ENTRY_STREET_NO_ADD_TEXT . '</span>': ''); ?>
++<br class="clearBoth" /> 
++
+ <?php
+   if (ACCOUNT_SUBURB == 'true') {
+ ?>

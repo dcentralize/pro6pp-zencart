@@ -1,0 +1,25 @@
+--- /var/www/zencart/includes/modules/pages/checkout_shipping_address/jscript_main.php	2012-09-18 21:36:42.000000000 +0200
++++ zencart_pro6pp/MODIFY_FILES/includes/modules/pages/checkout_shipping_address/jscript_main.php	2010-07-12 17:03:26.000000000 +0200
+@@ -6,7 +6,7 @@
+  * @copyright Copyright 2003-2010 Zen Cart Development Team
+  * @copyright Portions Copyright 2003 osCommerce
+  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+- * @version $Id: jscript_main.php 17018 2010-07-27 07:25:41Z drbyte $
++ * @version $Id: jscript_main.php 16186 2010-05-03 18:38:57Z drbyte $
+  */
+ ?>
+ <script language="javascript" type="text/javascript"><!--
+@@ -145,6 +145,7 @@
+ <?php } ?>
+ <?php if ((int)ENTRY_STREET_ADDRESS_MIN_LENGTH > 0) { ?>
+   check_input("street_address", <?php echo (int)ENTRY_STREET_ADDRESS_MIN_LENGTH; ?>, "<?php echo ENTRY_STREET_ADDRESS_ERROR; ?>");
++  check_input("street_no", <?php echo ENTRY_STREET_NO_MIN_LENGTH; ?>, "<?php echo ENTRY_STREET_NO_ERROR; ?>");  
+ <?php } ?>
+ <?php if ((int)ENTRY_POSTCODE_MIN_LENGTH > 0) { ?>
+   check_input("postcode", <?php echo (int)ENTRY_POSTCODE_MIN_LENGTH; ?>, "<?php echo ENTRY_POST_CODE_ERROR; ?>");
+@@ -175,4 +176,4 @@
+     return true;
+   }
+ }
+-//--></script>
++//--></script>

@@ -1,0 +1,75 @@
+--- /var/www/zencart/includes/modules/pages/address_book_process/header_php.php	2012-09-18 21:36:42.000000000 +0200
++++ zencart_pro6pp/MODIFY_FILES/includes/modules/pages/address_book_process/header_php.php	2010-07-12 15:35:14.000000000 +0200
+@@ -3,10 +3,10 @@
+  * Header code file for the Address Book Process page
+  *
+  * @package page
+- * @copyright Copyright 2003-2011 Zen Cart Development Team
++ * @copyright Copyright 2003-2010 Zen Cart Development Team
+  * @copyright Portions Copyright 2003 osCommerce
+  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+- * @version $Id: header_php.php 18695 2011-05-04 05:24:19Z drbyte $
++ * @version $Id: header_php.php 15534 2010-02-20 05:23:11Z drbyte $
+  */
+ // This should be first line of the script:
+ $zco_notifier->notify('NOTIFY_HEADER_START_ADDRESS_BOOK_PROCESS');
+@@ -21,14 +21,13 @@
+ /**
+  * Process deletes
+  */
+-if (isset($_GET['action']) && ($_GET['action'] == 'deleteconfirm') && isset($_POST['delete']) && is_numeric($_POST['delete'])) 
+-{
++if (isset($_GET['action']) && ($_GET['action'] == 'deleteconfirm') && isset($_GET['delete']) && is_numeric($_GET['delete'])) {
+   $sql = "DELETE FROM " . TABLE_ADDRESS_BOOK . "
+           WHERE  address_book_id = :delete
+           AND    customers_id = :customersID";
+ 
+   $sql = $db->bindVars($sql, ':customersID', $_SESSION['customer_id'], 'integer');
+-  $sql = $db->bindVars($sql, ':delete', $_POST['delete'], 'integer');
++  $sql = $db->bindVars($sql, ':delete', $_GET['delete'], 'integer');
+   $db->Execute($sql);
+ 
+   $zco_notifier->notify('NOTIFY_HEADER_ADDRESS_BOOK_DELETION_DONE');
+@@ -58,7 +57,10 @@
+   if (ACCOUNT_COMPANY == 'true') $company = zen_db_prepare_input($_POST['company']);
+   $firstname = zen_db_prepare_input(zen_sanitize_string($_POST['firstname']));
+   $lastname = zen_db_prepare_input(zen_sanitize_string($_POST['lastname']));
+-  $street_address = zen_db_prepare_input($_POST['street_address']);
++  $street_address = zen_db_prepare_input($_POST['street_address']) . " " . zen_db_prepare_input($_POST['street_no']) . " " . zen_db_prepare_input($_POST['street_no_add']);
++  $street_only = zen_db_prepare_input($_POST['street_address']);
++  $street_no = zen_db_prepare_input($_POST['street_no']);
++  $street_no_add = zen_db_prepare_input($_POST['street_no_add']);
+   if (ACCOUNT_SUBURB == 'true') $suburb = zen_db_prepare_input($_POST['suburb']);
+   $postcode = zen_db_prepare_input($_POST['postcode']);
+   $city = zen_db_prepare_input($_POST['city']);
+@@ -99,6 +101,12 @@
+     $error = true;
+     $messageStack->add('addressbook', ENTRY_STREET_ADDRESS_ERROR);
+   }
++  
++  if (strlen($street_no) < ENTRY_STREET_NO_MIN_LENGTH) {
++      $error = true;
++
++      $messageStack->add('addressbook', ENTRY_STREET_NO_ERROR);
++    }
+ 
+   if (strlen($city) < ENTRY_CITY_MIN_LENGTH) {
+     $error = true;
+@@ -169,6 +177,9 @@
+     $sql_data_array= array(array('fieldName'=>'entry_firstname', 'value'=>$firstname, 'type'=>'string'),
+                            array('fieldName'=>'entry_lastname', 'value'=>$lastname, 'type'=>'string'),
+                            array('fieldName'=>'entry_street_address', 'value'=>$street_address, 'type'=>'string'),
++						   array('fieldName'=>'entry_street_only', 'value'=>$street_only, 'type'=>'string'),
++						   array('fieldName'=>'entry_street_no', 'value'=>$street_no, 'type'=>'integer'),
++						   array('fieldName'=>'entry_street_no_add', 'value'=>$street_no_add, 'type'=>'string'),
+                            array('fieldName'=>'entry_postcode', 'value'=>$postcode, 'type'=>'string'),
+                            array('fieldName'=>'entry_city', 'value'=>$city, 'type'=>'string'),
+                            array('fieldName'=>'entry_country_id', 'value'=>$country, 'type'=>'integer'));
+@@ -331,6 +342,6 @@
+ } else {
+   $breadcrumb->add(NAVBAR_TITLE_ADD_ENTRY);
+ }
+-
++  $street_address = $street_only;
+ // This should be last line of the script:
+ $zco_notifier->notify('NOTIFY_HEADER_END_ADDRESS_BOOK_PROCESS');

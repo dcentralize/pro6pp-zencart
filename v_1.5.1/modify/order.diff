@@ -1,0 +1,506 @@
+--- /var/www/zencart/includes/classes/order.php	2012-09-18 21:36:42.000000000 +0200
++++ d-centralize/workspace/zenCart/zencart_pro6pp/MODIFY_FILES/includes/classes/order.php	2010-07-12 16:59:20.000000000 +0200
+@@ -3,9 +3,9 @@
+  * File contains the order-processing class ("order")
+  *
+  * @package classes
+- * @copyright Copyright 2003-2012 Zen Cart Development Team
++ * @copyright Copyright 2003-2010 Zen Cart Development Team
+  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+- * @version GIT: $Id: Author: Ian Wilson  Fri Jun 1 14:21:21 2012 +0000 Modified in v1.5.1 $
++ * @version $Id: order.php 16580 2010-06-02 21:12:23Z drbyte $
+  */
+ /**
+  * order class
+@@ -41,19 +41,22 @@
+     $order_id = zen_db_prepare_input($order_id);
+ 
+     $order_query = "select customers_id, customers_name, customers_company,
+-                         customers_street_address, customers_suburb, customers_city,
+-                         customers_postcode, customers_state, customers_country,
+-                         customers_telephone, customers_email_address, customers_address_format_id,
+-                         delivery_name, delivery_company, delivery_street_address, delivery_suburb,
+-                         delivery_city, delivery_postcode, delivery_state, delivery_country,
+-                         delivery_address_format_id, billing_name, billing_company,
+-                         billing_street_address, billing_suburb, billing_city, billing_postcode,
+-                         billing_state, billing_country, billing_address_format_id,
+-                         payment_method, payment_module_code, shipping_method, shipping_module_code,
+-                         coupon_code, cc_type, cc_owner, cc_number, cc_expires, currency, currency_value,
+-                         date_purchased, orders_status, last_modified, order_total, order_tax, ip_address
+-                        from " . TABLE_ORDERS . "
+-                        where orders_id = '" . (int)$order_id . "'";
++	customers_street_address, customers_street_only, customers_street_no,
++	customers_street_no_add, customers_suburb, customers_city,
++	customers_postcode, customers_state, customers_country,
++	customers_telephone, customers_email_address,
++	customers_address_format_id, delivery_name, delivery_company,
++	delivery_street_address, delivery_street_only, delivery_street_no,
++	delivery_street_no_add, delivery_suburb, delivery_city,
++	delivery_postcode, delivery_state, delivery_country,
++	delivery_address_format_id, billing_name, billing_company,
++	billing_street_address, billing_street_only, billing_street_no,
++	billing_street_no_add, billing_suburb, billing_city, billing_postcode,
++	billing_state, billing_country, billing_address_format_id,
++	payment_method, payment_module_code, shipping_method,
++	shipping_module_code, coupon_code, cc_type, cc_owner, cc_number,
++	cc_expires, currency, currency_value, date_purchased, orders_status,
++	last_modified, order_total, order_tax, ip_address from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'";
+ 
+     $order = $db->Execute($order_query);
+ 
+@@ -124,41 +127,47 @@
+                         );
+ 
+     $this->customer = array('id' => $order->fields['customers_id'],
+-                            'name' => $order->fields['customers_name'],
+-                            'company' => $order->fields['customers_company'],
+-                            'street_address' => $order->fields['customers_street_address'],
+-                            'suburb' => $order->fields['customers_suburb'],
+-                            'city' => $order->fields['customers_city'],
+-                            'postcode' => $order->fields['customers_postcode'],
+-                            'state' => $order->fields['customers_state'],
+-                            'country' => $order->fields['customers_country'],
+-                            'format_id' => $order->fields['customers_address_format_id'],
+-                            'telephone' => $order->fields['customers_telephone'],
+-                            'email_address' => $order->fields['customers_email_address']);
++                              'name' => $order->fields['customers_name'],
++                              'company' => $order->fields['customers_company'],
++                              'street_address' => $order->fields['customers_street_address'],
++                              'street_only' => $order->fields['customers_street_only'],
++                              'street_no' => $order->fields['customers_street_no'],
++                              'street_no_add' => $order->fields['customers_street_no_add'],
++                              'suburb' => $order->fields['customers_suburb'],
++                              'city' => $order->fields['customers_city'],
++                              'postcode' => $order->fields['customers_postcode'],
++                              'state' => $order->fields['customers_state'],
+ 
+     $this->delivery = array('name' => $order->fields['delivery_name'],
+-                            'company' => $order->fields['delivery_company'],
+-                            'street_address' => $order->fields['delivery_street_address'],
+-                            'suburb' => $order->fields['delivery_suburb'],
+-                            'city' => $order->fields['delivery_city'],
+-                            'postcode' => $order->fields['delivery_postcode'],
+-                            'state' => $order->fields['delivery_state'],
+-                            'country' => $order->fields['delivery_country'],
+-                            'format_id' => $order->fields['delivery_address_format_id']);
++                              'company' => $order->fields['delivery_company'],
++                              'street_address' => $order->fields['delivery_street_address'],
++                              'street_only' => $order->fields['delivery_street_only'],
++                              'street_no' => $order->fields['delivery_street_no'],
++                              'street_no_add' => $order->fields['delivery_street_no_add'],
++                              'suburb' => $order->fields['delivery_suburb'],
++                              'city' => $order->fields['delivery_city'],
++                              'postcode' => $order->fields['delivery_postcode'],
++                              'state' => $order->fields['delivery_state'],
++                              'country' => $order->fields['delivery_country'],
++                              'format_id' => $order->fields['delivery_address_format_id']);
+ 
+     if (empty($this->delivery['name']) && empty($this->delivery['street_address'])) {
+       $this->delivery = false;
+     }
+ 
+     $this->billing = array('name' => $order->fields['billing_name'],
+-                           'company' => $order->fields['billing_company'],
+-                           'street_address' => $order->fields['billing_street_address'],
+-                           'suburb' => $order->fields['billing_suburb'],
+-                           'city' => $order->fields['billing_city'],
+-                           'postcode' => $order->fields['billing_postcode'],
+-                           'state' => $order->fields['billing_state'],
+-                           'country' => $order->fields['billing_country'],
+-                           'format_id' => $order->fields['billing_address_format_id']);
++                             'company' => $order->fields['billing_company'],
++                             'street_address' => $order->fields['billing_street_address'],
++                             'street_only' => $order->fields['billing_street_only'],
++                             'street_no' => $order->fields['billing_street_no'],
++                             'street_no_add' => $order->fields['billing_street_no_add'],
++                             'suburb' => $order->fields['billing_suburb'],
++                             'city' => $order->fields['billing_city'],
++                             'postcode' => $order->fields['billing_postcode'],
++                             'state' => $order->fields['billing_state'],
++                             'country' => $order->fields['billing_country'],
++                             'format_id' => $order->fields['billing_address_format_id']);
++
+ 
+     $index = 0;
+     $orders_products_query = "select orders_products_id, products_id, products_name,
+@@ -239,69 +248,68 @@
+   function cart() {
+     global $db, $currencies;
+ 
+-    $decimals = $currencies->get_decimal_places($_SESSION['currency']);
+-
+     $this->content_type = $_SESSION['cart']->get_content_type();
+ 
+-    $customer_address_query = "select c.customers_firstname, c.customers_lastname, c.customers_telephone,
+-                                    c.customers_email_address, ab.entry_company, ab.entry_street_address,
+-                                    ab.entry_suburb, ab.entry_postcode, ab.entry_city, ab.entry_zone_id,
+-                                    z.zone_name, co.countries_id, co.countries_name,
+-                                    co.countries_iso_code_2, co.countries_iso_code_3,
+-                                    co.address_format_id, ab.entry_state
+-                                   from (" . TABLE_CUSTOMERS . " c, " . TABLE_ADDRESS_BOOK . " ab )
+-                                   left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+-                                   left join " . TABLE_COUNTRIES . " co on (ab.entry_country_id = co.countries_id)
+-                                   where c.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+-                                   and ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+-                                   and c.customers_default_address_id = ab.address_book_id";
+-
+-    $customer_address = $db->Execute($customer_address_query);
+-
+-    $shipping_address_query = "select ab.entry_firstname, ab.entry_lastname, ab.entry_company,
+-                                    ab.entry_street_address, ab.entry_suburb, ab.entry_postcode,
+-                                    ab.entry_city, ab.entry_zone_id, z.zone_name, ab.entry_country_id,
+-                                    c.countries_id, c.countries_name, c.countries_iso_code_2,
+-                                    c.countries_iso_code_3, c.address_format_id, ab.entry_state
+-                                   from " . TABLE_ADDRESS_BOOK . " ab
+-                                   left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+-                                   left join " . TABLE_COUNTRIES . " c on (ab.entry_country_id = c.countries_id)
+-                                   where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+-                                   and ab.address_book_id = '" . (int)$_SESSION['sendto'] . "'";
+-
+-    $shipping_address = $db->Execute($shipping_address_query);
+-
+-    $billing_address_query = "select ab.entry_firstname, ab.entry_lastname, ab.entry_company,
+-                                   ab.entry_street_address, ab.entry_suburb, ab.entry_postcode,
+-                                   ab.entry_city, ab.entry_zone_id, z.zone_name, ab.entry_country_id,
+-                                   c.countries_id, c.countries_name, c.countries_iso_code_2,
+-                                   c.countries_iso_code_3, c.address_format_id, ab.entry_state
+-                                  from " . TABLE_ADDRESS_BOOK . " ab
+-                                  left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+-                                  left join " . TABLE_COUNTRIES . " c on (ab.entry_country_id = c.countries_id)
+-                                  where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+-                                  and ab.address_book_id = '" . (int)$_SESSION['billto'] . "'";
++    $customer_address_query = "select c.customers_firstname, c.customers_lastname, c.customers_telephone, c.customers_email_address,
++								ab.entry_company, ab.entry_street_address, ab.entry_street_only,
++								ab.entry_street_no, ab.entry_street_no_add, ab.entry_suburb,
++								ab.entry_postcode, ab.entry_city, ab.entry_zone_id, z.zone_name,
++								co.countries_id, co.countries_name, co.countries_iso_code_2,
++								co.countries_iso_code_3, co.address_format_id, ab.entry_state from (" . TABLE_CUSTOMERS . " c, " . TABLE_ADDRESS_BOOK . " ab ) 
++								left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id) 
++								left join " . TABLE_COUNTRIES . " co on (ab.entry_country_id = co.countries_id) 
++								where c.customers_id = '" . (int)$_SESSION['customer_id'] . "' and ab.customers_id = '" . (int)$_SESSION['customer_id'] . "' 
++								and c.customers_default_address_id = ab.address_book_id"; 
++
++	$customer_address = $db->Execute($customer_address_query); 
++	
++	$shipping_address_query = "select ab.entry_firstname, ab.entry_lastname, ab.entry_company,
++								ab.entry_street_address, ab.entry_street_only, ab.entry_street_no,
++								ab.entry_street_no_add, ab.entry_suburb, ab.entry_postcode,
++								ab.entry_city, ab.entry_zone_id, z.zone_name, ab.entry_country_id,
++								c.countries_id, c.countries_name, c.countries_iso_code_2,
++								c.countries_iso_code_3, c.address_format_id, ab.entry_state from " . TABLE_ADDRESS_BOOK . " ab 
++								left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id) 
++								left join " . TABLE_COUNTRIES . " c on (ab.entry_country_id = c.countries_id) 
++								where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "' 
++								and ab.address_book_id = '" . (int)$_SESSION['sendto'] . "'"; 
++
++	$shipping_address = $db->Execute($shipping_address_query); 
++
++	$billing_address_query = "select ab.entry_firstname, ab.entry_lastname, ab.entry_company,
++							ab.entry_street_address, ab.entry_street_only, ab.entry_street_no,
++							ab.entry_street_no_add, ab.entry_suburb, ab.entry_postcode,
++							ab.entry_city, ab.entry_zone_id, z.zone_name, ab.entry_country_id,
++							c.countries_id, c.countries_name, c.countries_iso_code_2,
++							c.countries_iso_code_3, c.address_format_id, ab.entry_state from " . TABLE_ADDRESS_BOOK . " ab 
++							left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id) 
++							left join " . TABLE_COUNTRIES . " c on (ab.entry_country_id = c.countries_id) 
++							where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "' 
++							and ab.address_book_id = '" . (int)$_SESSION['billto'] . "'"; 
++
++	$billing_address = $db->Execute($billing_address_query);
+ 
+-    $billing_address = $db->Execute($billing_address_query);
+ 
+-    // set default tax calculation for not-logged-in visitors
+-    $taxCountryId = $taxZoneId = -1;
++    //STORE_PRODUCT_TAX_BASIS
+ 
+-    $tax_address_query = '';
+     switch (STORE_PRODUCT_TAX_BASIS) {
+       case 'Shipping':
++
+       $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
+                               from " . TABLE_ADDRESS_BOOK . " ab
+                               left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+                               where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+                               and ab.address_book_id = '" . (int)($this->content_type == 'virtual' ? $_SESSION['billto'] : $_SESSION['sendto']) . "'";
++      $tax_address = $db->Execute($tax_address_query);
+       break;
+       case 'Billing':
++
+       $tax_address_query = "select ab.entry_country_id, ab.entry_zone_id
+                               from " . TABLE_ADDRESS_BOOK . " ab
+                               left join " . TABLE_ZONES . " z on (ab.entry_zone_id = z.zone_id)
+                               where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+                               and ab.address_book_id = '" . (int)$_SESSION['billto'] . "'";
++      $tax_address = $db->Execute($tax_address_query);
+       break;
+       case 'Store':
+       if ($billing_address->fields['entry_zone_id'] == STORE_ZONE) {
+@@ -318,15 +326,10 @@
+                                 where ab.customers_id = '" . (int)$_SESSION['customer_id'] . "'
+                                 and ab.address_book_id = '" . (int)($this->content_type == 'virtual' ? $_SESSION['billto'] : $_SESSION['sendto']) . "'";
+       }
+-    }
+-    if ($tax_address_query != '') {
+       $tax_address = $db->Execute($tax_address_query);
+-      if ($tax_address->recordCount() > 0) {
+-        $taxCountryId = $tax_address->fields['entry_country_id'];
+-        $taxZoneId = $tax_address->fields['entry_zone_id'];
+-      }
+     }
+ 
++
+     $class =& $_SESSION['payment'];
+ 
+     if (isset($_SESSION['cc_id'])) {
+@@ -389,38 +392,54 @@
+     }
+ // eof: move below calculations
+ */
+-    $this->customer = array('firstname' => $customer_address->fields['customers_firstname'],
+-                            'lastname' => $customer_address->fields['customers_lastname'],
+-                            'company' => $customer_address->fields['entry_company'],
+-                            'street_address' => $customer_address->fields['entry_street_address'],
+-                            'suburb' => $customer_address->fields['entry_suburb'],
+-                            'city' => $customer_address->fields['entry_city'],
+-                            'postcode' => $customer_address->fields['entry_postcode'],
+-                            'state' => ((zen_not_null($customer_address->fields['entry_state'])) ? $customer_address->fields['entry_state'] : $customer_address->fields['zone_name']),
+-                            'zone_id' => $customer_address->fields['entry_zone_id'],
+-                            'country' => array('id' => $customer_address->fields['countries_id'], 'title' => $customer_address->fields['countries_name'], 'iso_code_2' => $customer_address->fields['countries_iso_code_2'], 'iso_code_3' => $customer_address->fields['countries_iso_code_3']),
+-                            'format_id' => (int)$customer_address->fields['address_format_id'],
+-                            'telephone' => $customer_address->fields['customers_telephone'],
+-                            'email_address' => $customer_address->fields['customers_email_address']);
+-
+-    $this->delivery = array('firstname' => $shipping_address->fields['entry_firstname'],
+-                            'lastname' => $shipping_address->fields['entry_lastname'],
+-                            'company' => $shipping_address->fields['entry_company'],
+-                            'street_address' => $shipping_address->fields['entry_street_address'],
+-                            'suburb' => $shipping_address->fields['entry_suburb'],
+-                            'city' => $shipping_address->fields['entry_city'],
+-                            'postcode' => $shipping_address->fields['entry_postcode'],
+-                            'state' => ((zen_not_null($shipping_address->fields['entry_state'])) ? $shipping_address->fields['entry_state'] : $shipping_address->fields['zone_name']),
+-                            'zone_id' => $shipping_address->fields['entry_zone_id'],
+-                            'country' => array('id' => $shipping_address->fields['countries_id'], 'title' => $shipping_address->fields['countries_name'], 'iso_code_2' => $shipping_address->fields['countries_iso_code_2'], 'iso_code_3' => $shipping_address->fields['countries_iso_code_3']),
+-                            'country_id' => $shipping_address->fields['entry_country_id'],
+-                            'format_id' => (int)$shipping_address->fields['address_format_id']);
++	$this->customer = array('firstname' => $customer_address->fields['customers_firstname'], 
++							'lastname' => $customer_address->fields['customers_lastname'], 
++							'company' => $customer_address->fields['entry_company'], 
++							'street_address' => $customer_address->fields['entry_street_address'], 
++							'street_only' => $customer_address->fields['entry_street_only'], 
++							'street_no' => $customer_address->fields['entry_street_no'], 
++							'street_no_add' => $customer_address->fields['entry_street_no_add'], 
++							'suburb' => $customer_address->fields['entry_suburb'], 
++							'city' => $customer_address->fields['entry_city'], 
++							'postcode' => $customer_address->fields['entry_postcode'], 
++							'state' => ((zen_not_null($customer_address->fields['entry_state'])) ? $customer_address->fields['entry_state'] : $customer_address->fields['zone_name']), 
++						    'zone_id' => $customer_address->fields['entry_zone_id'], 
++							'country' => array('id' => $customer_address->fields['countries_id'], 
++							'title' => $customer_address->fields['countries_name'], 
++							'iso_code_2' => $customer_address->fields['countries_iso_code_2'],
++							'iso_code_3' => $customer_address->fields['countries_iso_code_3']), 
++							'format_id' => $customer_address->fields['address_format_id'], 
++							'telephone' => $customer_address->fields['customers_telephone'],
++							'email_address' => $customer_address->fields['customers_email_address']);
++
++    $this->delivery = array('firstname' => $shipping_address->fields['entry_firstname'], 
++							'lastname' => $shipping_address->fields['entry_lastname'], 
++							'company' => $shipping_address->fields['entry_company'], 
++							'street_address' => $shipping_address->fields['entry_street_address'], 
++							'street_only' => $shipping_address->fields['entry_street_only'], 
++							'street_no' => $shipping_address->fields['entry_street_no'], 
++							'street_no_add' => $shipping_address->fields['entry_street_no_add'], 
++							'suburb' => $shipping_address->fields['entry_suburb'], 
++							'city' => $shipping_address->fields['entry_city'], 
++							'postcode' => $shipping_address->fields['entry_postcode'], 
++							'state' => ((zen_not_null($shipping_address->fields['entry_state'])) ? $shipping_address->fields['entry_state'] : $shipping_address->fields['zone_name']), 
++							'zone_id' => $shipping_address->fields['entry_zone_id'], 
++							'country' => array('id' => $shipping_address->fields['countries_id'], 
++							'title' => $shipping_address->fields['countries_name'], 
++							'iso_code_2' => $shipping_address->fields['countries_iso_code_2'],
++							'iso_code_3' => $shipping_address->fields['countries_iso_code_3']), 
++							'country_id' => $shipping_address->fields['entry_country_id'], 
++							'format_id' => $shipping_address->fields['address_format_id']);
+ 
+     $this->billing = array('firstname' => $billing_address->fields['entry_firstname'],
+                            'lastname' => $billing_address->fields['entry_lastname'],
+                            'company' => $billing_address->fields['entry_company'],
+                            'street_address' => $billing_address->fields['entry_street_address'],
+-                           'suburb' => $billing_address->fields['entry_suburb'],
++                           'street_address' => $shipping_address->fields['entry_street_address'], 
++							'street_only' => $shipping_address->fields['entry_street_only'], 
++							'street_no' => $shipping_address->fields['entry_street_no'], 
++							'street_no_add' => $shipping_address->fields['entry_street_no_add'], 
++							'suburb' => $billing_address->fields['entry_suburb'],
+                            'city' => $billing_address->fields['entry_city'],
+                            'postcode' => $billing_address->fields['entry_postcode'],
+                            'state' => ((zen_not_null($billing_address->fields['entry_state'])) ? $billing_address->fields['entry_state'] : $billing_address->fields['zone_name']),
+@@ -437,13 +456,13 @@
+       } else {
+         $rowClass="rowOdd";
+       }
+-      $taxRates = zen_get_multiple_tax_rates($products[$i]['tax_class_id'], $taxCountryId, $taxZoneId);
++      $taxRates = zen_get_multiple_tax_rates($products[$i]['tax_class_id'], $tax_address->fields['entry_country_id'], $tax_address->fields['entry_zone_id']);
+       $this->products[$index] = array('qty' => $products[$i]['quantity'],
+                                       'name' => $products[$i]['name'],
+                                       'model' => $products[$i]['model'],
+-                                      'tax' => zen_get_tax_rate($products[$i]['tax_class_id'], $taxCountryId, $taxZoneId),
++                                      'tax' => zen_get_tax_rate($products[$i]['tax_class_id'], $tax_address->fields['entry_country_id'], $tax_address->fields['entry_zone_id']),
+                                       'tax_groups'=>$taxRates,
+-                                      'tax_description' => zen_get_tax_description($products[$i]['tax_class_id'], $taxCountryId, $taxZoneId),
++                                      'tax_description' => zen_get_tax_description($products[$i]['tax_class_id'], $tax_address->fields['entry_country_id'], $tax_address->fields['entry_zone_id']),
+                                       'price' => $products[$i]['price'],
+                                       'final_price' => $products[$i]['price'] + $_SESSION['cart']->attributes_price($products[$i]['id']),
+                                       'onetime_charges' => $_SESSION['cart']->attributes_price_onetime_charges($products[$i]['id'], $products[$i]['quantity']),
+@@ -585,61 +604,66 @@
+       $this->info['shipping_module_code'] = $_SESSION['shipping'];
+     }
+ 
+-    // Sanitize cc-num if present, using maximum 10 chars, with middle chars stripped out with XX
+-    if (strlen($this->info['cc_number']) > 10) {
+-      $cEnd = substr($this->info['cc_number'], -4);
+-      $cOffset = strlen($this->info['cc_number']) -4;
+-      $cStart = substr($this->info['cc_number'], 0, ($cOffset > 4 ? 4 : (int)$cOffset));
+-      $this->info['cc_number'] = str_pad($cStart, 6, 'X') . $cEnd;
+-    };
+-
+-    $sql_data_array = array('customers_id' => $_SESSION['customer_id'],
+-                            'customers_name' => $this->customer['firstname'] . ' ' . $this->customer['lastname'],
+-                            'customers_company' => $this->customer['company'],
+-                            'customers_street_address' => $this->customer['street_address'],
+-                            'customers_suburb' => $this->customer['suburb'],
+-                            'customers_city' => $this->customer['city'],
+-                            'customers_postcode' => $this->customer['postcode'],
+-                            'customers_state' => $this->customer['state'],
+-                            'customers_country' => $this->customer['country']['title'],
+-                            'customers_telephone' => $this->customer['telephone'],
+-                            'customers_email_address' => $this->customer['email_address'],
+-                            'customers_address_format_id' => $this->customer['format_id'],
+-                            'delivery_name' => $this->delivery['firstname'] . ' ' . $this->delivery['lastname'],
+-                            'delivery_company' => $this->delivery['company'],
+-                            'delivery_street_address' => $this->delivery['street_address'],
+-                            'delivery_suburb' => $this->delivery['suburb'],
+-                            'delivery_city' => $this->delivery['city'],
+-                            'delivery_postcode' => $this->delivery['postcode'],
+-                            'delivery_state' => $this->delivery['state'],
+-                            'delivery_country' => $this->delivery['country']['title'],
+-                            'delivery_address_format_id' => $this->delivery['format_id'],
+-                            'billing_name' => $this->billing['firstname'] . ' ' . $this->billing['lastname'],
+-                            'billing_company' => $this->billing['company'],
+-                            'billing_street_address' => $this->billing['street_address'],
+-                            'billing_suburb' => $this->billing['suburb'],
+-                            'billing_city' => $this->billing['city'],
+-                            'billing_postcode' => $this->billing['postcode'],
+-                            'billing_state' => $this->billing['state'],
+-                            'billing_country' => $this->billing['country']['title'],
+-                            'billing_address_format_id' => $this->billing['format_id'],
+-                            'payment_method' => (($this->info['payment_module_code'] == '' and $this->info['payment_method'] == '') ? PAYMENT_METHOD_GV : $this->info['payment_method']),
+-                            'payment_module_code' => (($this->info['payment_module_code'] == '' and $this->info['payment_method'] == '') ? PAYMENT_MODULE_GV : $this->info['payment_module_code']),
+-                            'shipping_method' => $this->info['shipping_method'],
+-                            'shipping_module_code' => (strpos($this->info['shipping_module_code'], '_') > 0 ? substr($this->info['shipping_module_code'], 0, strpos($this->info['shipping_module_code'], '_')) : $this->info['shipping_module_code']),
+-                            'coupon_code' => $this->info['coupon_code'],
+-                            'cc_type' => $this->info['cc_type'],
+-                            'cc_owner' => $this->info['cc_owner'],
+-                            'cc_number' => $this->info['cc_number'],
+-                            'cc_expires' => $this->info['cc_expires'],
+-                            'date_purchased' => 'now()',
+-                            'orders_status' => $this->info['order_status'],
+-                            'order_total' => $this->info['total'],
+-                            'order_tax' => $this->info['tax'],
+-                            'currency' => $this->info['currency'],
+-                            'currency_value' => $this->info['currency_value'],
+-                            'ip_address' => $_SESSION['customers_ip_address'] . ' - ' . $_SERVER['REMOTE_ADDR']
+-                            );
++    $sql_data_array =
++array('customers_id' => $customer_id, 'customers_name' =>
++$this->customer['firstname'] . ' ' . $this->customer['lastname'],
++'customers_company' => $this->customer['company'],
++'customers_street_address' => $this->customer['street_address'],
++'customers_street_only' => $this->customer['street_only'],
++'customers_street_no' => $this->customer['street_no'],
++'customers_street_no_add' => $this->customer['street_no_add'],
++'customers_suburb' => $this->customer['suburb'], 'customers_city'
++=> $this->customer['city'], 'customers_postcode' =>
++$this->customer['postcode'], 'customers_state' =>
++$this->customer['state'], 'customers_country' =>
++$this->customer['country']['title'], 'customers_telephone' =>
++$this->customer['telephone'], 'customers_email_address' =>
++$this->customer['email_address'], 'customers_address_format_id'
++=> $this->customer['format_id'], 'delivery_name' =>
++$this->delivery['firstname'] . ' ' . $this->delivery['lastname'],
++'delivery_company' => $this->delivery['company'],
++'delivery_street_address' => $this->delivery['street_address'],
++'delivery_street_only' => $this->delivery['street_only'],
++'delivery_street_no' => $this->delivery['street_no'],
++'delivery_street_no_add' => $this->delivery['street_no_add'],
++'delivery_suburb' => $this->delivery['suburb'], 'delivery_city'
++=> $this->delivery['city'], 'delivery_postcode' =>
++$this->delivery['postcode'], 'delivery_state' =>
++$this->delivery['state'], 'delivery_country' =>
++$this->delivery['country']['title'], 'delivery_address_format_id'
++=> $this->delivery['format_id'], 'billing_name' =>
++$this->billing['firstname'] . ' ' . $this->billing['lastname'],
++'billing_company' => $this->billing['company'],
++'billing_street_address' => $this->billing['street_address'],
++'billing_street_only' => $this->billing['street_only'],
++'billing_street_no' => $this->billing['street_no'],
++'billing_street_no_add' => $this->billing['street_no_add'],
++'billing_suburb' => $this->billing['suburb'], 'billing_city'
++=> $this->billing['city'], 'billing_postcode' =>
++$this->billing['postcode'], 'billing_state' =>
++$this->billing['state'], 'billing_country' =>
++$this->billing['country']['title'], 'billing_address_format_id'
++=> $this->billing['format_id'], 'payment_method' =>
++(($this->info['payment_module_code'] == '' and
++$this->info['payment_method'] == '') ? PAYMENT_METHOD_GV :
++$this->info['payment_method']), 'payment_module_code' =>
++(($this->info['payment_module_code'] == '' and
++$this->info['payment_method'] == '') ? PAYMENT_MODULE_GV :
++$this->info['payment_module_code']), 'shipping_method' =>
++$this->info['shipping_method'], 'shipping_module_code' =>
++(strpos($this->info['shipping_module_code'], '_') > 0 ?
++substr($this->info['shipping_module_code'], 0,
++strpos($this->info['shipping_module_code'], '_')) :
++$this->info['shipping_module_code']), 'coupon_code' =>
++$this->info['coupon_code'], 'cc_type' =>
++$this->info['cc_type'], 'cc_owner' => $this->info['cc_owner'],
++'cc_number' => $this->info['cc_number'], 'cc_expires' =>
++$this->info['cc_expires'], 'date_purchased' => 'now()',
++'orders_status' => $this->info['order_status'], 'order_total'
++=> $this->info['total'], 'order_tax' => $this->info['tax'],
++'currency' => $this->info['currency'], 'currency_value' =>
++$this->info['currency_value'], 'ip_address' =>
++$_SESSION['customers_ip_address'] . ' - ' . $_SERVER['REMOTE_ADDR'] );
+ 
+ 
+     zen_db_perform(TABLE_ORDERS, $sql_data_array);
+@@ -894,7 +918,7 @@
+ 
+       // update totals counters
+       $this->total_weight += ($this->products[$i]['qty'] * $this->products[$i]['weight']);
+-      $this->total_tax += zen_calculate_tax($total_products_price * $this->products[$i]['qty'], $products_tax);
++      $this->total_tax += zen_calculate_tax($total_products_price, $products_tax) * $this->products[$i]['qty'];
+       $this->total_cost += $total_products_price;
+ 
+       $this->notify('NOTIFY_ORDER_PROCESSING_ONE_TIME_CHARGES_BEGIN');
+@@ -974,10 +998,10 @@
+     $html_msg['PRODUCTS_DETAIL']='<table class="product-details" border="0" width="100%" cellspacing="0" cellpadding="2">' . $this->products_ordered_html . '</table>';
+ 
+     //order totals area
+-    $html_ot = '<tr><td class="order-totals-text" align="right" width="100%">' . '&nbsp;' . '</td> ' . "\n" . '<td class="order-totals-num" align="right" nowrap="nowrap">' . '---------' .'</td> </tr>' . "\n";
++    $html_ot .= '<td class="order-totals-text" align="right" width="100%">' . '&nbsp;' . '</td> ' . "\n" . '<td class="order-totals-num" align="right" nowrap="nowrap">' . '---------' .'</td> </tr>' . "\n" . '<tr>';
+     for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
+       $email_order .= strip_tags($order_totals[$i]['title']) . ' ' . strip_tags($order_totals[$i]['text']) . "\n";
+-      $html_ot .= '<tr><td class="order-totals-text" align="right" width="100%">' . $order_totals[$i]['title'] . '</td> ' . "\n" . '<td class="order-totals-num" align="right" nowrap="nowrap">' .($order_totals[$i]['text']) .'</td> </tr>' . "\n";
++      $html_ot .= '<td class="order-totals-text" align="right" width="100%">' . $order_totals[$i]['title'] . '</td> ' . "\n" . '<td class="order-totals-num" align="right" nowrap="nowrap">' .($order_totals[$i]['text']) .'</td> </tr>' . "\n" . '<tr>';
+     }
+     $html_msg['ORDER_TOTALS'] = '<table border="0" width="100%" cellspacing="0" cellpadding="2"> ' . $html_ot . ' </table>';
+ 
+@@ -1044,7 +1068,6 @@
+         $html_msg['EMAIL_TEXT_HEADER'] = nl2br($pmt_details) . $html_msg['EMAIL_TEXT_HEADER'];
+       }
+ 
+-      $this->notify('NOTIFY_ORDER_INVOICE_CONTENT_FOR_ADDITIONAL_EMAILS', array('zf_insert_id' => $zf_insert_id, 'text_email' => $email_order, 'html_email' => $html_msg));
+       zen_mail('', SEND_EXTRA_ORDER_EMAILS_TO, SEND_EXTRA_NEW_ORDERS_EMAILS_TO_SUBJECT . ' ' . EMAIL_TEXT_SUBJECT . EMAIL_ORDER_NUMBER_SUBJECT . $zf_insert_id,
+       $email_order . $extra_info['TEXT'], STORE_NAME, EMAIL_FROM, $html_msg, 'checkout_extra', $this->attachArray);
+     }

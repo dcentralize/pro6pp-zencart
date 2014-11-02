@@ -1,0 +1,45 @@
+--- /var/www/zencart/includes/modules/checkout_new_address.php	2012-09-18 21:36:42.000000000 +0200
++++ zencart_pro6pp/MODIFY_FILES/includes/modules/checkout_new_address.php	2010-07-12 16:07:06.000000000 +0200
+@@ -33,7 +33,8 @@
+     if (ACCOUNT_COMPANY == 'true') $company = zen_db_prepare_input($_POST['company']);
+     $firstname = zen_db_prepare_input($_POST['firstname']);
+     $lastname = zen_db_prepare_input($_POST['lastname']);
+-    $street_address = zen_db_prepare_input($_POST['street_address']);
++    $street_address = zen_db_prepare_input($_POST['street_address']) . " " . zen_db_prepare_input($_POST['street_no']) . " " . zen_db_prepare_input($_POST['street_no_add']); $street_only = zen_db_prepare_input($_POST['street_address']); $street_no =
++zen_db_prepare_input($_POST['street_no']); $street_no_add = zen_db_prepare_input($_POST['street_no_add']);
+     if (ACCOUNT_SUBURB == 'true') $suburb = zen_db_prepare_input($_POST['suburb']);
+     $postcode = zen_db_prepare_input($_POST['postcode']);
+     $city = zen_db_prepare_input($_POST['city']);
+@@ -68,6 +69,12 @@
+       $error = true;
+       $messageStack->add('checkout_address', ENTRY_STREET_ADDRESS_ERROR);
+     }
++	
++	if (strlen($street_no) < ENTRY_STREET_NO_MIN_LENGTH) {
++      $error = true;
++
++      $messageStack->add('checkout_address', ENTRY_STREET_NO_ERROR);
++    }
+ 
+     if (strlen($city) < ENTRY_CITY_MIN_LENGTH) {
+       $error = true;
+@@ -139,6 +146,9 @@
+                               array('fieldName'=>'entry_firstname', 'value'=>$firstname, 'type'=>'string'),
+                               array('fieldName'=>'entry_lastname','value'=>$lastname, 'type'=>'string'),
+                               array('fieldName'=>'entry_street_address','value'=>$street_address, 'type'=>'string'),
++							  array('fieldName'=>'entry_street_only', 'value'=>$street_only, 'type'=>'string'),
++							  array('fieldName'=>'entry_street_no', 'value'=>$street_no, 'type'=>'integer'),
++							  array('fieldName'=>'entry_street_no_add', 'value'=>$street_no_add, 'type'=>'string'),
+                               array('fieldName'=>'entry_postcode', 'value'=>$postcode, 'type'=>'string'),
+                               array('fieldName'=>'entry_city', 'value'=>$city, 'type'=>'string'),
+                               array('fieldName'=>'entry_country_id', 'value'=>$country, 'type'=>'integer')
+@@ -249,7 +259,7 @@
+   $flag_show_pulldown_states = ((($process == true || $entry_state_has_zones == true) && $zone_name == '') || ACCOUNT_STATE_DRAW_INITIAL_DROPDOWN == 'true' || $error_state_input) ? true : false;
+   $state = ($flag_show_pulldown_states) ? $state : $zone_name;
+   $state_field_label = ($flag_show_pulldown_states) ? '' : ENTRY_STATE;
+-
++  $street_address = $street_only;
+ // This should be last line of the script:
+ $zco_notifier->notify('NOTIFY_MODULE_END_CHECKOUT_NEW_ADDRESS');
+ ?>
+\ No newline at end of file
